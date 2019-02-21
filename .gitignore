@@ -1,0 +1,14 @@
+
+*.log
+npm-debug.log
+npm-debug.log.*
+eslint.log
+eslint.log.*
+
+node_modules
+
+dist
+.idea/
+.vscode
+
+

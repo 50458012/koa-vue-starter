@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+html(lang="en")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    meta(http-equiv="X-UA-Compatible", content="ie=edge")
+    title Documentdsafdsf
+  body
+    .test=aaa
+    .test=NODE_ENV
+    .test 66666666666666666
+    img(src="/images/aaa.png")
+    #app
+  
+    if NODE_ENV === 'production'
+      -
+        var cdns = [{
+          name: 'vue',
+          vasion: '2.5.21'
+        }, {
+          name: 'vuex',
+          vasion: '3.0.1'
+        }, {
+          name: 'vue-router',
+          vasion: '3.0.2'
+        }];
+      each val in cdns
+        script(src=`https://cdn.bootcss.com/${val.name}/${val.vasion}/${val.name}.min.js`)
