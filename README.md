@@ -1,6 +1,14 @@
 # koa-vue-starter
 
-``基于webpack4，babel7，koa2的vue项目前端渲染的脚手架
+基于webpack4，babel7，koa2的vue项目前端渲染的脚手架demo 支持热更新，做了部分打包优化
+
+使用pug模板， stylus预编译  可在build/generate-loader.js 自行给loader传递变量
+
+定义了inline-url 使用stylus主动对图片base64
+
+node 端数据可以通过pug-loader或使用Koa的app.state传递给pug模板
+
+生产环境下依赖项通过cdn加载
 
 <br/>
 
