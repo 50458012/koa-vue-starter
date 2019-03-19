@@ -1,10 +1,8 @@
 <template lang="pug">
   .aaaa
-    div 1111000
-    br
-    br
-    br
-    img(src="@/aaa.png")
+    router-link(to="/car") 456456456
+    //- img(src="@/aaa.png")
+    router-view
 </template>
 
 <script>
@@ -18,7 +16,7 @@ export default {
 </script>
 <style lang="stylus" scoped>
 @import './index.styl';
-  div
+  /*div
     color blue
-    background inline-url('/images/aaa.png')
+    background inline-url('/images/aaa.png')*/
 </style>

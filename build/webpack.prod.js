@@ -8,7 +8,8 @@ module.exports = require('webpack-merge')(require('./webpack.base'), {
   externals: {
     vue: 'Vue',
     vuex: 'Vuex',
-    'vue-router': 'VueRouter'
+    'vue-router': 'VueRouter',
+    'element-ui': 'ELEMENT'
   },
   optimization: {
     splitChunks: {

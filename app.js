@@ -19,8 +19,8 @@ app.use(require('koa-body')())
     // cache: options.viewsCache,
     // basedir: options.viewsDir
   }
-})); */
-/* const router = require('koa-router')() ;
+})); 
+const router = require('koa-router')() ;
 router.get('*', ctx => ctx.render('index'))
 // 路由服务API
 app.use(router.routes());
@@ -30,18 +30,18 @@ app.use(require('koa2-history-api-fallback')({
   index: '/dist/index.html'
 }))
 
-if (process.env.NODE_ENV === 'development') {
+if (process.env.NODE_ENV !== 'production') {
   require('koa-webpack')({
     config: require('./build/webpack.dev'),
     devMiddleware: {
       stats: 'minimal'
     }
   }).then(m => {
-    app.use(m)
+    app.use(m);
   })
 }
 
-app.use(require('koa-static')('public'))
+
 // app.use(middleware);
 
 /* .then(middleware => {
@@ -51,6 +51,6 @@ app.use(require('koa-static')('public'))
     ctx.response.body = middleware.devMiddleware.fileSystem.createReadStream(filename)
   });
 }) */
-
+app.use(require('koa-static')('public'))
 // module.exports = app
-app.listen(3000, () => console.log('服务器已经启动> 3000'))
+app.listen(3000, () => {console.log('服务器已经启动> 3000')})

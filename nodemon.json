@@ -3,7 +3,8 @@
   "watch": [
     "server",
     "conf",
-    "build"
+    "build",
+    "app.js"
   ],
   "exec": "node app"
 }

@@ -4,12 +4,14 @@ html(lang="en")
     meta(charset="UTF-8")
     meta(name="viewport", content="width=device-width, initial-scale=1.0")
     meta(http-equiv="X-UA-Compatible", content="ie=edge")
-    title Documentdsafdsf
+    title koa-vue-starter
+    link(href="https://cdn.bootcss.com/element-ui/2.6.1/theme-chalk/index.css", rel="stylesheet")
+    
   body
     .test=aaa
     .test=NODE_ENV
     .test 66666666666666666
-    img(src="/images/aaa.png")
+    //- img(src="/images/aaa.png")
     #app
   
     if NODE_ENV === 'production'
@@ -23,6 +25,9 @@ html(lang="en")
         }, {
           name: 'vue-router',
           vasion: '3.0.2'
+        }, {
+          name: 'element-ui',
+          vasion: '2.6.1'
         }];
-      each val in cdns
-        script(src=`https://cdn.bootcss.com/${val.name}/${val.vasion}/${val.name}.min.js`)
+      each val,i in cdns
+        script(src=`https://cdn.bootcss.com/${val.name}/${val.vasion}/${i < 3 ? val.name + '.min' : 'index'}.js`)
