@@ -22,7 +22,7 @@ const generateLoaders = ([extension, loaderOptions = {}]) => {
   const loaders = []
   if (extension !== 'css') {
     loaders.push({
-      loader: extension + '-loader',
+      loader: `${extension}${extension === 'styl' ? 'us' : ''}-loader`,
       options: Object.assign({
         sourceMap: !isProd
       }, loaderOptions)

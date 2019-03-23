@@ -6,6 +6,7 @@
       active-color="#13ce66"
       inactive-color="#ff4949"
     )
+    router-view 
 </template>
 <script>
 import {A_GET_ABOUT} from '../../stores/about/types.js'
@@ -13,7 +14,7 @@ import {mapState} from 'vuex'
 export default {
   methods: {
     bbb() {
-      console.log('click');
+      // console.log('click');
       
     }
   },
@@ -21,7 +22,7 @@ export default {
     demo: {
       /*inserted(...args) {
         console.log('inserted', args);
-      },*/
+      },
       bind(el, bind, vnode) {
         const { componentOptions, data } = vnode;
         console.log(bind, componentOptions, data);

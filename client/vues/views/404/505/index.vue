@@ -1,6 +1,6 @@
 <template lang="pug">
   .aaa
-    h3 404页面
+    h3 505页面
     router-view
 </template>
 <script>
