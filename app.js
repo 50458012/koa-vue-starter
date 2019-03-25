@@ -30,27 +30,64 @@ app.use(require('koa2-history-api-fallback')({
   index: '/dist/index.html'
 }))
 
-if (process.env.NODE_ENV !== 'production') {
-  require('koa-webpack')({
-    config: require('./build/webpack.dev'),
-    devMiddleware: {
-      stats: 'minimal'
-    }
-  }).then(m => {
-    app.use(m);
-  })
+
+
+
+app.use(require('koa-static')('public'))
+// module.exports = app
+
+const HotMid = async () => {
+  if (process.env.NODE_ENV !== 'production') {
+    return require('koa-webpack')({
+      config: require('./build/webpack.dev'),
+      devMiddleware: {
+        stats: 'minimal'
+      }
+    }).then(m => {
+      return app.use(m)
+    })
+  }
 }
 
 
-// app.use(middleware);
 
-/* .then(middleware => {
-  app.use(async (ctx) => {
-    const filename = path.resolve('public/dist/index.html')
-    ctx.response.type = 'html'
-    ctx.response.body = middleware.devMiddleware.fileSystem.createReadStream(filename)
-  });
-}) */
-app.use(require('koa-static')('public'))
-// module.exports = app
-app.listen(3000, () => {console.log('服务器已经启动> 3000')})
+
+const port = 3000 ;
+const appStart = () => {
+  HotMid().then(() => {
+    app.listen(port, ()=> {
+      console.log('服务器已经启动> 3000')
+    })
+  })
+}
+// 检测端口是否被占用
+const server = require('net').createServer().listen(port);
+server.on('listening', function () { // 执行这块代码说明端口未被占用
+  server.close() // 关闭服务
+  appStart()
+})
+
+server.on('error', function (err) {
+  if (err.code === 'EADDRINUSE') { // 端口已经被使用
+    console.log('端口被占用，正在关闭当前端口')
+    const exec = require('child_process').exec ;
+    exec(process.platform=='win32'?'netstat -ano':'ps aux', (err, stdout, stderr) => {
+      if(err){ return console.log(err); }
+      stdout.split('\n').findIndex((line) => {
+        const [,adress,,,pid] = line.trim().split(/\s+/);
+        if (adress && adress.split(':')[1] == port)  {
+          exec('taskkill /F /pid ' + pid, err => {
+            if(err){
+              console.log(err)
+                return console.log('释放指定端口失败！！请手动关闭');    
+            }
+            console.log('释放端口成功')
+            appStart()
+          })
+          return true
+        }
+      })
+    })
+  }
+})
+
