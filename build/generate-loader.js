@@ -46,7 +46,7 @@ const pugLoaderOption = {
   loader: 'pug-html-loader',
   options: {
     data: {
-      aaa: '我是local数据',
+      aaa: '我是pug-loader定义变量',
       'NODE_ENV': process.env.NODE_ENV || 'development'
     },
   }

@@ -7,44 +7,10 @@ import ELEMENT from 'element-ui';
 Vue.use(VueRouter);
 Vue.use(Vuex);
 Vue.use(ELEMENT);
-const plugins = [];
-if(process.env.NODE_ENV !== 'production') {
+const plugins = []
+if (process.env.NODE_ENV !== 'production') {
   plugins.push(require('vuex/dist/logger')())
 };
-const views = require.context('./views', true, /[^component]\/index\.vue$/).keys()
-console.log(views);
-
-/*const views = require.context('./views', true, /index\.vue/).keys().reduce((res, v)=> v.split('/').slice(1, -1).reduce((r,c,i,view)=> {
-  const NAME = view.slice(0, i + 1).join('.');
-  let t = r.find(({name}) => name === NAME);
-  if (!t) {
-    t = {
-      path: (!i ? '/' : '') + c,
-      name: NAME
-    }
-    r.push(t)
-  }
-  if (i === view.length -1) { // 最后一位
-    Object.assign(t, {
-      component: ok => require([`./views/${v.slice(2)}`], ok)
-    })
-    return res
-  } else { // 增加 children //base路径
-    if (!t.children) {
-      Object.assign(t, {
-        children: []
-      })
-    }
-    return t.children
-  }
-}, res) , [{
-  path: '/',
-  redirect: '/car'
-}, {
-  path: '*',
-  component: resolve => require(['./views/404/index'], resolve)
-}])
-console.log(views)*/
 
 const stores = require.context('./stores', true, /index\.js$/);
 const app = new Vue({
@@ -52,47 +18,48 @@ const app = new Vue({
   router: new VueRouter({
     mode: 'history',
     base: '/',
-    scrollBehavior(to, from, savedPosition) {
+    scrollBehavior (to, from, savedPosition) {
       return savedPosition || {
         x: 0,
         y: 0
-      };
+      }
     },
-    routes: require.context('./views', true, /[^components]\/index\.vue$/)
-    .keys()
-    .reduce((res, v)=> v.split('/').slice(1, -1)
-    .reduce((r,c,i,a)=> {
-      const NAME = a.slice(0, i + 1).join('.');
-      let t = r.find(({name}) => name === NAME);
-      if (!t) {
-        t = {
-          path: (!i ? '/' : '') + c,
-          name: NAME
-        }
-        r.unshift(t)
-      }
-      if (i === a.length -1) { // 最后一位 返回根数组
-        Object.assign(t, {
-          component: ok => require([`./views/${v.slice(2)}`], ok)
-        })
-        return res
-      } else { // 增加 children //base路径
-        if (!t.children) {
-          Object.assign(t, {
-            children: []
-          })
-        }
-        // 返回children 数组
-        return t.children
-      }
-    }, res) , [{
-      path: '/',
-      redirect: '/car'
-    }, {
-      path: '*',
-      component: resolve => require(['./views/404/index'], resolve)
-    }])
-   
+    routes: require.context('./views', true, /index\.vue$/)
+      .keys().filter(path => !path.includes('components'))
+      .reduce((routes, path) => path.split('/').slice(1, -1)
+        .reduce((router, pathItem, index, pathArr) => {
+          const name = pathArr.slice(0, index + 1).join('.')
+          let target = (router.length && router.find(({ name: NAME }) => name === NAME)) || null
+          if (!target) {
+            target = {
+              path: (!index ? '/' : '') + pathItem,
+              name
+            }
+            router.splice(1, 0, target)
+          }
+          if (index === pathArr.length - 1) { // 最后一位 返回根数组
+            Object.assign(target, {
+              component: resolve => require([`./views/${path.slice(2)}`], resolve)
+            })
+            return routes
+          } else { // 增加 children //base路径
+            if (!target.children) {
+              Object.assign(target, {
+                children: [],
+                base: '/' + target.name.replace('.', '/')
+              })
+            }
+            // 返回children 数组
+            return target.children
+          }
+        }, routes), [{
+        path: '/',
+        redirect: '/car'
+      }, {
+        path: '*',
+        redirect: '/404',
+        component: resolve => require(['./views/404/index'], resolve)
+      }])
   }),
   store: new Vuex.Store({
     modules: stores.keys().reduce((modules, mod) => {
@@ -105,17 +72,5 @@ const app = new Vue({
   }),
   render: h => h(App)
 })
-// const routers = require.context('./routers', false, /\.js$/);
- /*routers.keys().reduce((routes, mod) => {
-      const res = routers(mod) || [];
-      return (res.__esModule && res.default || res).concat(routes)
-    }, [{
-      path: '/',
-      redirect: '/car'
-    }, {
-      name: '404',
-      path: '*',
-      component: resolve => require(['./views/404/index'], resolve)
-    }])*/
 
-    
+console.log(app._router.options.routes);

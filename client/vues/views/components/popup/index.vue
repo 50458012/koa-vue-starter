@@ -1,7 +1,5 @@
 <template lang="pug">
-  .aaa
-    h3 6006页面
-    router-view
+  h3 404页面
 </template>
 <script>
 export default {

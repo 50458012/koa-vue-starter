@@ -1,6 +1,5 @@
 'use strict'
 const app = new (require('koa'))()
-
 /* const path = require('path')
 
 // 静态资源部署
@@ -30,7 +29,7 @@ app.use(require('koa2-history-api-fallback')({
   index: '/dist/index.html'
 }))
 
-
+debugger
 
 
 app.use(require('koa-static')('public'))
