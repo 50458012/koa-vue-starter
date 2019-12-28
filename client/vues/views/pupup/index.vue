@@ -139,13 +139,16 @@ export default {
               const result = prop.split(/([\+ | \-])/)
               
               let [method] = result.splice(1, 1)
-              [start_expression, end_expression] = result.map(expression => expression.split(/(\d+)/).slice(1))
-              if ([method] === '+') {
+              const [start_expression, end_expression] = result.map(expression => expression.split(/(\d+)/).slice(1))
+              if (method === '+') {
                 method = 'add'
               } else {
                 method = 'subtract'
               }
-              return today.add(...start_expression)[method](...end_expression)
+               const res =today.add(...start_expression)[method](...end_expression)
+               console.log(res);
+               
+               return res
             }
             return today.add(count, 'day')
           case 'number':
