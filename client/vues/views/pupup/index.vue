@@ -36,7 +36,7 @@ export default {
      */
     timeLimit: {
       type: [String, Number, Object, Array],
-      default: 30
+      default: "6month+29day"
     },
     multiple: {
       type: Number,
@@ -136,13 +136,16 @@ export default {
               return  dayjs(prop)
             } else if (/^\d+\w+[\+ | \-]\d+\w+$/.test(prop)) {
               debugger
-              let [start_expression, method, end_expression] = prop.split(/([\+ | \-])/)
-              if (type === '+') {
+              const result = prop.split(/([\+ | \-])/)
+              
+              let [method] = result.splice(1, 1)
+              [start_expression, end_expression] = result.map(expression => expression.split(/(\d+)/).slice(1))
+              if ([method] === '+') {
                 method = 'add'
               } else {
                 method = 'subtract'
               }
-              return today.add(...start_expression.split(/(\d+)/))[method](...end_expression.split(/(\d+)/))
+              return today.add(...start_expression)[method](...end_expression)
             }
             return today.add(count, 'day')
           case 'number':
