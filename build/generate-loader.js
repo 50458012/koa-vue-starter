@@ -20,9 +20,18 @@ const cssLoaders = [isProd ? require('mini-css-extract-plugin').loader : 'vue-st
 }]
 const generateLoaders = ([extension, loaderOptions = {}]) => {
   const loaders = []
-  if (extension !== 'css') {
+  if (!extension.includes('css')) {
     loaders.push({
       loader: `${extension}${extension === 'styl' ? 'us' : ''}-loader`,
+      options: Object.assign({
+        sourceMap: !isProd
+      }, loaderOptions)
+    });
+  } else if (extension.length === 4) {
+    console.log(extension);
+    
+    loaders.push({
+      loader: 'sass-loader',
       options: Object.assign({
         sourceMap: !isProd
       }, loaderOptions)

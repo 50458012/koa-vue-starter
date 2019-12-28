@@ -11,7 +11,8 @@ module.exports = {
   output: {
     path: JOIN('public', 'dist'),
     filename: 'js/[name].js',
-    publicPath: '/dist/'
+    publicPath: '/dist/',
+    
   },
   devtool: 'source-map',
   resolve: {
