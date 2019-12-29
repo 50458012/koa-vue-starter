@@ -141,25 +141,25 @@ export default {
       this.$watch('selectedDates', function (selectedDates) {
         const [start_date] = selectedDates
         const doFreeze = selectedDates.length === 1
-        Object.values(this.calendars)
-          .forEach(month => Object.values(month)
-            .forEach(date => {
-              if (date && date.status !== 'disabled') {
-                if (doFreeze) {
-                  if (this.checkedDisablFn && this.checkedDisablFn(date, start_date)) {
-                    date.status = 'freeze'
-                  } else if (date.status === 'between') {
-                    date.status = ''
-                  }
-                } else if (date.status === 'freeze') {
+        for (const monthTitle in this.calendars) {
+          const month = this.calendars[monthTitle]
+          for (const dateFormat in month) {
+            const date = month[dateFormat];
+            if (date && date.status !== 'disabled') {
+              if (doFreeze) {
+                if (this.checkedDisablFn && this.checkedDisablFn(date, start_date)) {
+                  date.status = 'freeze'
+                } else if (date.status === 'between') {
                   date.status = ''
-                } else if (!date.status && isBetween(date, selectedDates)) {
-                  date.status = 'between'
                 }
+              } else if (date.status === 'freeze') {
+                date.status = ''
+              } else if (!date.status && isBetween(date, selectedDates)) {
+                date.status = 'between'
               }
             }
-          )
-        )
+          }
+        }
       })
     }
   },
