@@ -4,10 +4,10 @@
     <div class="calendar-main">
       <div class="calendar-info" v-for="(month, monthTitle) in calendars" :key="monthTitle">
         <h5 class="calendar-month-title">{{getMonthTitle(monthTitle)}}</h5>
-        // 事件委派  提升性能 减少卡顿
-        <ul class="calendar-month-info" @click="chooseDate(monthTitle, $event)">
+        <!-- // 事件委派  提升性能 减少卡顿 -->
+        <ul class="calendar-month-info" @click="chooseDate(month, $event)">
           <li class="calendar-date" :key="day"
-            :data-date="date && day"
+            :data-date="day"
             v-for="(date, day) in month"
             :class="date.status"
           >{{date && date.$D}}</li>
@@ -22,13 +22,13 @@
 import PageLayer from '../components/input/PageLayer.vue'
 import dayjs from 'dayjs';
 import dateRangePickerLocale from './locale.js';
-window.KLK_LANG = 'zh-CN'
+window.KLK_LANG = 'vi'
 export default {
   name: 'page-calendar',
   props: {
     /**
      * @props timeLimit {[String,  Number, Object, Array]}
-     * String => must be format as 'YYYY-MM-DD' => [today, your date]
+     * String 1. format as 'YYYY-MM-DD' => [today, your date] 2. '3month' or '3month+18day' => [today, today + your date]
      * Number => [today, today + your number days]
      * Object => must be instead of dayjs
      * Array => [<String|Number|Object>] length must be two
@@ -36,38 +36,42 @@ export default {
      */
     timeLimit: {
       type: [String, Number, Object, Array],
-      default: "6month+29day"
+      default: "1month+1month+1month"
     },
     multiple: {
       type: Number,
       default: 2
     },
-    checkedDisablFn: Function
-  },
-  watch: {
-    selectedDates(newArr, oldArr) {
-      if (newArr.length) {
-        
-      }
+    checkedDisablFn: {
+      type:Function,
+      default: (date, start_date) => Math.abs(date.diff(start_date, 'day')) > 5
     }
   },
+  // watch: {
+  //   selectedDates(newArr, oldArr) {
+  //     if (newArr.length) {
+        
+  //     }
+  //   }
+  // },
   methods: {
-    chooseDate(title, {target}) {
+    chooseDate(month, {target}) {
+      debugger
       const {freeze, between} = this.match
-      const date = this.calendars[title][target.getAttribute('data-date')]
+      const date = month[target.getAttribute('data-date')]
       if (!date || ['disabled', 'freeze', 'checked'].includes(date.status)) return
-      date.status = 'checked'
       const {length} = this.selectedDates
       if (!length || length === this.multiple || this.multiple === 1) {
         if (length) {
           between && length === 2 && this.checkBetween(false)
-          this.selectedDates.forEach(item => item.checked = false)
+          this.selectedDates.forEach(item => item.status = '')
         }
         this.selectedDates = [date]
         freeze && this.checkFreeze(true)
       } else {
         this.selectedDates.push(date)
       }
+      date.status = 'checked'
       if (this.selectedDates.length === this.multiple) {
         this.$nextTick(() => this.$emit('confirm', this.selectedDates))
         freeze && this.checkFreeze(false)
@@ -76,47 +80,49 @@ export default {
 
       }
     },
-    checkBetween(status) {
+    checkBetween(status = '') {
       debugger
-      let [start_date, end_date] = this.selectedDates.map(date => date.format('YYYY-MM-DD'))
-      let monthKey
-      while ((monthKey = start_date.slice(0, -3)) in this.calendars) {
+      let [start_date, end_date] = this.selectedDates.map(date => date.format('YYYY-M-D'))
+      let [, monthKey, date] = start_date.split(/^(\d{4}-\d+)-(\d+)/)
+      date = +date
+      while (monthKey in this.calendars) {
         const monthData = this.calendars[monthKey]
-        let date = +start_date.slice(-2)
-        while(`${monthKey}-${++date}` in monthData) {
-          start_date = `${monthKey}-${date}`
+        while((start_date = `${monthKey}-${++date}`) in monthData) {
             if (start_date === end_date) {
               return
             }
-            monthData[start_date].status = 'between' || ''
+            monthData[start_date].status = status && 'between'
         }
         let [year, month] = monthKey.split("-").map(Number)
-          if (++mongth > 11) {
-            month = 0
+          if (++month > 12) {
+            month = 1
             year++
           }
-          start_date = [year, month, '01'].join('-')
+          date = 0
+          monthKey = [year, month].join('-')
       }
     },
     /**
-     * @param status {Boolean} 修改date.freeze的值
-     *  1. true  执行checkedDisablFn 冻结执行结果为true 的日期
-     *  2. false 释放被冻结的日期
+     * @param status {Boolean}
+     *  1. true  执行checkedDisablFn 为真 执行结果为true date.status => 'freeze'
+     *  2. false 释放被冻结的日期 date.status => ''
      */
     checkFreeze(status) {
       Object.values(this.calendars)
-      .forEach(month => Object.values(month)
-      .forEach(date => {
-        if (date && date.status !== 'disabled') {
-          if (status) {
-            if(!date.status && this.checkedDisablFn(date, this.selectedDates)){
-              date.status = 'freeze'
+        .forEach(month => Object.values(month)
+          .forEach(date => {
+            if (date && date.status !== 'disabled') {
+              if (status) {
+                if(!date.status && this.checkedDisablFn(date, this.selectedDates[0])){
+                  date.status = 'freeze'
+                }
+              } else if (date.status === 'freeze') {
+                  date.status = ''
+              }
             }
-          } else if (date.status === 'freeze') {
-              date.status = ''
           }
-        }
-      }))
+        )
+      )
     }
   },
   computed: {
@@ -134,21 +140,11 @@ export default {
           case 'string':
             if (/^\d{4}(-\d{2}){2}$/.test(prop)) {
               return  dayjs(prop)
-            } else if (/^\d+\w+[\+ | \-]\d+\w+$/.test(prop)) {
-              debugger
-              const result = prop.split(/([\+ | \-])/)
-              
-              let [method] = result.splice(1, 1)
-              const [start_expression, end_expression] = result.map(expression => expression.split(/(\d+)/).slice(1))
-              if (method === '+') {
-                method = 'add'
-              } else {
-                method = 'subtract'
-              }
-               const res =today.add(...start_expression)[method](...end_expression)
-               console.log(res);
-               
-               return res
+            } else if (/^\d+\w+(\+\d+\w+)*$/.test(prop)) {
+              return prop.split('+')
+                .map(expression => expression.split(/(\d+)/))
+                .reduce((res, expression) => res.add(...expression.slice(1))
+              , today)
             }
             return today.add(count, 'day')
           case 'number':
@@ -167,34 +163,37 @@ export default {
       let lang = ['en', 'zh', 'zh', 'ko', 'ja'].find(lang => window.KLK_LANG.includes(lang))
       if (!lang) {
         const {monthNames} = this.local
-        return day => monthNames[day.get('month')] + ' ' + day.get('year')
+        const reg = /^(\d{4})-(\d+)/, regFn = (str, year, month) => monthNames[month - 1] + ' ' + year
+        return day => day.replace(reg, regFn)
       } else {
         let {titleFormat} = this.local
         if (lang === 'en') {
           titleFormat = titleFormat.replace('MM', 'MMM')
         } else {
-          titleFormat = titleFormat.replace('mm', 'MM')
+          titleFormat = titleFormat.replace('mm', 'M')
         }
-        return day => dayjs(day, 'YYYY-MM').format(titleFormat)
+        return day => dayjs(day, 'YYYY-M').format(titleFormat)
       }
     }
   },
-  created(){
+  created(){ 
       const  disabledFn = date => Object.assign(date, {
         status: ['Before', 'After'].findIndex((method, index) => date['is' + method](this.limitTime[index])) > -1 ? 'disabled' : ''
       }), calendars = {}
       let [start_date, end_date] = this.limitTime;
+      start_date = start_date.date(1)
       while (!start_date.isAfter(end_date, 'month')) {
         const months = {}
-        const key = start_date.format('YYYY-MM-00-')
-        for (let index = 0, day = start_date.date(1).day(); index < day; index++) {
-          months[key + index] = ''
+        const lastMonthDate = start_date.subtract(1, 'day')
+        let weekDay = start_date.day()
+        while (weekDay--) {
+          months[lastMonthDate.subtract(weekDay, 'day').format('YYYY-M-D')] = ''
         }
         for (let date = 1, daysInMonth = start_date.daysInMonth(); date <= daysInMonth; date++) {
           const day = disabledFn(start_date.date(date))
-          months[day.format('YYYY-MM-DD')] = day
+          months[day.format('YYYY-M-D')] = day
         }
-        calendars[start_date.format('YYYY-MM')] = months
+        calendars[start_date.format('YYYY-M')] = months
         start_date = start_date.add(1, 'month')
       }
       this.calendars = calendars
@@ -238,8 +237,14 @@ ul {
         &.disabled {
           background-color: #eee;
         }
+        &.freeze {
+          background-color: lightblue;
+        }
         &.checked {
           background-color: #bfc;
+        }
+        &.between {
+          background-color: yellowgreen;
         }
       }
     }
