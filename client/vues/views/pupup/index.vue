@@ -47,43 +47,30 @@ export default {
       default: (date, start_date) => Math.abs(date.diff(start_date, 'day')) > 5
     }
   },
-  // watch: {
-  //   selectedDates(newArr, oldArr) {
-  //     if (newArr.length) {
-        
-  //     }
-  //   }
-  // },
   methods: {
     chooseDate(month, {target}) {
-      debugger
-      const {freeze, between} = this.match
       const date = month[target.getAttribute('data-date')]
-      if (!date || ['disabled', 'freeze', 'checked'].includes(date.status)) return
-      const {length} = this.selectedDates
-      if (!length || length === this.multiple || this.multiple === 1) {
-        if (length) {
-          between && length === 2 && this.checkBetween(false)
-          this.selectedDates.forEach(item => item.status = '')
-        }
+      if (!date || ['disabled', 'freeze'].includes(date.status)) return
+      const {multiple} = this
+      if (this.selectedDates.length === multiple) {
+        this.selectedDates.forEach(item => item.status = '')
         this.selectedDates = [date]
-        freeze && this.checkFreeze(true)
-      } else {
-        this.selectedDates.push(date)
+      } else if (date.status !== 'checked') {
+        let method = 'push'
+        if (multiple === 2 && this.selectedDates.length === 1 && date.isBefore(this.selectedDates[0], 'day')) {
+          method = 'unshift'
+        }
+        this.selectedDates[method](date)
       }
-      date.status = 'checked'
-      if (this.selectedDates.length === this.multiple) {
-        this.$nextTick(() => this.$emit('confirm', this.selectedDates))
-        freeze && this.checkFreeze(false)
-        between && this.checkBetween(true)
+      this.$nextTick(() => {
+        date.status = 'checked'
+        this.selectedDates.length === multiple && this.$emit('confirm', this.selectedDates)
         // this.isShow = false
-
-      }
+      })
     },
-    checkBetween(status = '') {
-      debugger
-      let [start_date, end_date] = this.selectedDates.map(date => date.format('YYYY-M-D'))
-      let [, monthKey, date] = start_date.split(/^(\d{4}-\d+)-(\d+)/)
+    checkBetween(status, selectedDates) {
+      let [start_date, end_date] = selectedDates.map(date => date.format('YYYY-M-D'))
+      let [, monthKey, date] = start_date.split(/^(\d{4}-\d+)-(\d+)$/)
       date = +date
       while (monthKey in this.calendars) {
         const monthData = this.calendars[monthKey]
@@ -91,7 +78,7 @@ export default {
             if (start_date === end_date) {
               return
             }
-            monthData[start_date].status = status && 'between'
+            monthData[start_date].status = status
         }
         let [year, month] = monthKey.split("-").map(Number)
           if (++month > 12) {
@@ -108,12 +95,13 @@ export default {
      *  2. false 释放被冻结的日期 date.status => ''
      */
     checkFreeze(status) {
+      const [start_date] = this.selectedDates
       Object.values(this.calendars)
         .forEach(month => Object.values(month)
           .forEach(date => {
             if (date && date.status !== 'disabled') {
               if (status) {
-                if(!date.status && this.checkedDisablFn(date, this.selectedDates[0])){
+                if(!date.status && this.checkedDisablFn(date, start_date)){
                   date.status = 'freeze'
                 }
               } else if (date.status === 'freeze') {
@@ -177,9 +165,9 @@ export default {
     }
   },
   created(){ 
-      const  disabledFn = date => Object.assign(date, {
+      const calendars = {}, disabledFn = date => Object.assign(date, {
         status: ['Before', 'After'].findIndex((method, index) => date['is' + method](this.limitTime[index])) > -1 ? 'disabled' : ''
-      }), calendars = {}
+      })
       let [start_date, end_date] = this.limitTime;
       start_date = start_date.date(1)
       while (!start_date.isAfter(end_date, 'month')) {
@@ -197,8 +185,18 @@ export default {
         start_date = start_date.add(1, 'month')
       }
       this.calendars = calendars
-      console.log(calendars);
-      
+
+      if(this.multiple === 2) {
+        this.$watch('selectedDates', function (newTime, oldTime) {
+          const status = newTime.length === 2
+          this.checkedDisablFn && this.checkFreeze(!status)
+          if (status) {
+            this.checkBetween('between', newTime)
+          } else if (oldTime.length === 2) {
+            this.checkBetween('', oldTime)
+          }
+        })
+      }
     },
   data() {
     return {
