@@ -1,16 +1,26 @@
 <template>
   <page-layer :is-show="isShow">
-    <p slot="header">789789789789789789789</p>
+    <div slot="headerPlus" class="header-plus">
+      <h3 class="header-plus-title">选择入住时间和退房时间</h3>
+      <p class="header-plus-remind">Some reminders to remind the user</p>
+      <ul class="header-plus-week">
+        <li class="header-plus-week-day" v-for="day in ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']" :key="day">
+          {{'fnb.week.' + day | local}}
+        </li>
+      </ul>
+    </div>
     <div class="calendar-main">
       <div class="calendar-info" v-for="(month, monthTitle) in calendars" :key="monthTitle">
         <h5 class="calendar-month-title">{{monthTitle}}</h5>
-        <!-- // 事件委派  提升性能 减少卡顿 -->
-        <ul class="calendar-month-info" @click="chooseDate(month, $event)">
+        <ul class="calendar-month-info" @click="chooseDate(month, $event.target)">
           <li class="calendar-date" :key="day"
-            :data-date="day"
             v-for="(date, day) in month"
-            :class="date.status"
-          >{{date && date.$D}}</li>
+          ><div class="calendar-date-day"
+              :data-date="day"
+              :class="[date.status, {between: multiple ===2 && selectedDates.length === 2 && date.status === 'checked'}]"
+            >{{date && date.$D}}
+            </div>
+          </li>
         </ul>
       </div>
     </div>
@@ -19,10 +29,10 @@
 </template>
 
 <script>
-import PageLayer from '../components/input/PageLayer.vue'
+import PageLayer from '../../PageLayer.vue'
 import dayjs from 'dayjs';
-import dateRangePickerLocale from './locale.js';
-window.KLK_LANG = 'zh-CN'
+import dateRangePickerLocale from '../../../libs/dateRangePicker/locale.js';
+const local = dateRangePickerLocale[window.KLK_LANG] || dateRangePickerLocale['en']
 export default {
   name: 'page-calendar',
   props: {
@@ -50,8 +60,8 @@ export default {
     }
   },
   methods: {
-    chooseDate(month, {target}) {
-      const date = month[target.getAttribute('data-date')]
+    chooseDate(month, element) {
+      const date = month[element.getAttribute('data-date')]
       if (!date || ['disabled', 'freeze'].includes(date.status)) return
       const {multiple} = this
       if (this.selectedDates.length === multiple) {
@@ -104,10 +114,10 @@ export default {
     const getMonthTitle = (() => {
       let lang = ['en', 'zh', 'zh', 'ko', 'ja'].find(lang => window.KLK_LANG.includes(lang))
       if (!lang) {
-        const {monthNames} = this.local
+        const {monthNames} = local
         return day => monthNames[day.get('month')] + ' ' + day.get('year')
       } else {
-        let {titleFormat} = this.local
+        let {titleFormat} = local
         if (lang === 'en') {
           titleFormat = titleFormat.replace('MM', 'MMM')
         } else {
@@ -167,20 +177,24 @@ export default {
     return {
       calendars: {},
       isShow: true,
-      selectedDates: [],
-      local: Object.freeze(dateRangePickerLocale[window.KLK_LANG] || dateRangePickerLocale['en'])
+      selectedDates: []
+      
     }
+  },
+  filters: {
+    local: window.__
   },
   components: {PageLayer}
 }
 </script>
 <style lang="scss" scoped>
-* {
-  margin: 0;
-  padding: 0;
-}
-ul {
-  list-style-type: none;
+.header-plus {
+  &-title {
+    line-height: 64px;
+    color: #ff5722;
+    font-size: 20px;
+    font-weight: 600;
+  }
 }
 .calendar-main {
   .calendar-info {
@@ -195,21 +209,35 @@ ul {
       flex-wrap: wrap;
       .calendar-date{
         flex: 0 0 (100%/7);
-        line-height: 48px;
         text-align: center;
-        &.disabled {
-          background-color: #eee;
-        }
-        &.freeze {
-          background-color: lightblue;
-        }
-        &.checked {
-          background-color: #bfc;
-        }
-        &.between {
-          background-color: yellowgreen;
+        &-day {
+          margin: 8px 0;
+          height: 32px;
+          line-height: 32px;
+          &.disabled,
+          &.freeze {
+            color: rgba(0, 0, 0, 0.24);
+          }
+          &.between {
+            background-color: #ffbca7;
+            color: #fff;
+          }
+          &.checked {
+            color: #fff;
+            background: radial-gradient(circle, #ff5722 16px, #fff 16px);
+          }
         }
       }
+    }
+  }
+  .calendar-date-day.checked.between {
+    &:first-child {
+      background: linear-gradient(to right, #fff 50%, #ffbca7 50%),
+                  radial-gradient(circle, #ff5722 16px, transparent 16px) !important;
+    }
+    &:last-child {
+      background: linear-gradient(to right, #ffbca7 50%, #fff 50%),
+                  radial-gradient(circle, #ff5722 16px, transparent 16px) !important;
     }
   }
 }
