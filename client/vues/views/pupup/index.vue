@@ -15,23 +15,20 @@
         <ul class="calendar-month-info" @click="chooseDate(month, $event.target)">
           <li class="calendar-date" :key="day"
             v-for="(date, day) in month"
-          ><div class="calendar-date-day"
-              :data-date="day"
-              :class="[date.status, {between: multiple ===2 && selectedDates.length === 2 && date.status === 'checked'}]"
-            >{{date && date.$D}}
-            </div>
-          </li>
+            :data-date="day"
+            :class="date.status"
+            >{{date && date.$D}}</li>
         </ul>
       </div>
     </div>
   </page-layer>
-  
 </template>
 
 <script>
-import PageLayer from '../../PageLayer.vue'
+// import PageLayer from '../../PageLayer.vue'
+import PageLayer from '../components/input/PageLayer.vue'
 import dayjs from 'dayjs';
-import dateRangePickerLocale from '../../../libs/dateRangePicker/locale.js';
+import dateRangePickerLocale from './locale.js';
 const local = dateRangePickerLocale[window.KLK_LANG] || dateRangePickerLocale['en']
 export default {
   name: 'page-calendar',
@@ -74,11 +71,10 @@ export default {
         }
         this.selectedDates[method](date)
       }
-      this.$nextTick(() => {
-        date.status = 'checked'
-        this.selectedDates.length === multiple && this.$emit('confirm', this.selectedDates)
-        // this.isShow = false
-      })
+      date.status = 'checked'
+      if (this.selectedDates.length === multiple) {
+        this.$emit('confirm', this.selectedDates)
+      }
     }
   },
   computed: {
@@ -112,6 +108,7 @@ export default {
   created(){
     const calendars = {}
     const getMonthTitle = (() => {
+      window.KLK_LANG = "zh"
       let lang = ['en', 'zh', 'zh', 'ko', 'ja'].find(lang => window.KLK_LANG.includes(lang))
       if (!lang) {
         const {monthNames} = local
@@ -147,10 +144,31 @@ export default {
     this.calendars = calendars
 
     if(this.multiple === 2) {
-      // 每次 选择日期只遍历一次去手动计算状态 减少卡顿
+      /**
+       * 只有在范围选择（多选为2）中才会去计算 包含 选中开始日期后过滤日期
+       * 选中一个日期 => 执行 选中开始日期后冻结筛选失败的日期标记（freeze） 和 去掉包含标记（between）
+       * 选中两个个日期 => 执行 增加包含标记（between）和去掉选中开始日期后的冻结标记（freeze）
+       * 每次选择日期只遍历一次数据计算样式 只操作有变化的数据 虽然有点麻烦 逻辑复杂 但是 大大减少额外的性能开销 避免了卡顿
+       */
       this.$watch('selectedDates', function (selectedDates) {
         const [start_date] = selectedDates
+        // 不存在等于0的情况
         const doFreeze = selectedDates.length === 1
+        if(!doFreeze) {
+          /**
+           *  这里是selectedDates.length === 2 的情况 给每一项手动加的状态 选中 并且包含的class="checked (checked-left || checke-right)"
+           * 
+           * 如果使用响应式 让框架自己去计算是不是 选中并包含的状态 需要很长的表达式 且每一项都会去执行这个表达式
+           * <li
+           *    v-for="(date, day) in month"
+           *    :data-date="day"
+           *    class="calendar-date"
+           *    :class="[date.status, multiple ===2 && selectedDates.length === 2 && date.status === 'checked' && `checked-${['left', 'right'][selectedDates.indexOf(date)]}`]"
+           * >
+           */
+          const classList = ['left', 'right']
+          selectedDates.forEach((date, index) => date.status += ` checked-${classList[index]}`)
+        }
         for (const monthTitle in this.calendars) {
           const month = this.calendars[monthTitle]
           for (const dateFormat in month) {
@@ -188,6 +206,13 @@ export default {
 }
 </script>
 <style lang="scss" scoped>
+* {
+  margin: 0;
+  padding: 0;
+}
+ul{
+  list-style-type: none;
+}
 .header-plus {
   &-title {
     line-height: 64px;
@@ -210,34 +235,32 @@ export default {
       .calendar-date{
         flex: 0 0 (100%/7);
         text-align: center;
-        &-day {
-          margin: 8px 0;
-          height: 32px;
-          line-height: 32px;
-          &.disabled,
-          &.freeze {
-            color: rgba(0, 0, 0, 0.24);
+        box-sizing: content-box;
+        height: 32px;
+        line-height: 32px;
+        padding: 8px 0;
+        background-clip: content-box;
+        &.disabled,
+        &.freeze {
+          color: rgba(0, 0, 0, 0.24);
+        }
+        &.between {
+          background-color: #ffbca7;
+          color: #fff;
+        }
+        &.checked {
+          color: #fff;
+          background-image: radial-gradient(circle, #ff5722 16px, transparent 16px);
+          &-left {
+            background-image: radial-gradient(circle, #ff5722 16px, transparent 16px),
+                linear-gradient(to right, transparent 50%, #ffbca7 50%);
           }
-          &.between {
-            background-color: #ffbca7;
-            color: #fff;
-          }
-          &.checked {
-            color: #fff;
-            background: radial-gradient(circle, #ff5722 16px, #fff 16px);
+          &-right {
+            background-image: radial-gradient(circle, #ff5722 16px, transparent 16px),
+                linear-gradient(to left, transparent 50%, #ffbca7 50%);
           }
         }
       }
-    }
-  }
-  .calendar-date-day.checked.between {
-    &:first-child {
-      background: linear-gradient(to right, #fff 50%, #ffbca7 50%),
-                  radial-gradient(circle, #ff5722 16px, transparent 16px) !important;
-    }
-    &:last-child {
-      background: linear-gradient(to right, #ffbca7 50%, #fff 50%),
-                  radial-gradient(circle, #ff5722 16px, transparent 16px) !important;
     }
   }
 }
