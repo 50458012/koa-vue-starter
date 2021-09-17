@@ -1,53 +1,23 @@
-'use strict';
-const app = new (require('koa'))() ;
+const app = new (require('koa'))()
+const pug = require('pug')
+const path = require('path') 
 
-const path = require('path') ;
-
-// 静态资源部署
-const pro_dir = path.resolve(__dirname, '../', 'public')
-
-//  koa-body request body 解析
-app.use(require('koa-body')())
-// 网页模板引擎
-/*app.use(require('koa-views')(path.resolve('public/dist'), {
-  default: 'html',
-  extension: 'html',
-  options: {
-    pretty: false,
-    debug: false,
-    // compileDebug: false,
-    // cache: options.viewsCache,
-    // basedir: options.viewsDir
+app.use((ctx, next) => {
+  ctx.state = {
+    fn: (a, b) => a + b,
+    require,
+    aaa: '我是pug-loader定义变量',
+    'NODE_ENV': process.env.NODE_ENV || 'production'
   }
-}));*/
-/*const router = require('koa-router')() ;
-router.get('*', ctx => ctx.render('index'))
-// 路由服务API
-app.use(router.routes());
-app.use(router.allowedMethods());*/
-app.use(require('koa2-history-api-fallback')({
-  htmlAcceptHeaders: ['text/html'],
-  index: 'dist/index.html'
-}));
-require('koa-webpack')({
-  config: require('../build/webpack.dev'),
-  devMiddleware: {
-    stats: 'minimal'
-  }
-}).then(m => {
-  app.use(m)
-});
+  next()
+})
 
-app.use(require('koa-static')('./public'));
-// app.use(middleware);
+app.use(async ctx => {
+  const html = pug.renderFile(path.resolve(__dirname, '../index.pug'), Object.assign({ local: '123 + 456' }, ctx.state))
+  ctx.response.type = 'text/html; charset=utf-8'
+  ctx.response.body = html
+})
 
-/*.then(middleware => {
-  app.use(async (ctx) => {
-    const filename = path.resolve('public/dist/index.html')
-    ctx.response.type = 'html'
-    ctx.response.body = middleware.devMiddleware.fileSystem.createReadStream(filename)
-  });
-})*/
-
-app.listen(3000,()=> console.log('服务器已经启动> 3000'));
-// module.exports = app ;
+app.listen(3004, () => {
+  console.log('服务器已经启动> 3004')
+})

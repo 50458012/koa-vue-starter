@@ -29,7 +29,6 @@ const generateLoaders = ([extension, loaderOptions = {}]) => {
     });
   } else if (extension.length === 4) {
     console.log(extension);
-    
     loaders.push({
       loader: 'sass-loader',
       options: Object.assign({
@@ -55,6 +54,8 @@ const pugLoaderOption = {
   loader: 'pug-html-loader',
   options: {
     data: {
+      fn: (a, b) => a + b,
+      require,
       aaa: '我是pug-loader定义变量',
       'NODE_ENV': process.env.NODE_ENV || 'development'
     },

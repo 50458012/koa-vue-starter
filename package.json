@@ -12,7 +12,7 @@
     "build": "webpack --config build/webpack.prod.js",
     "dev": "nodemon",
     "start": "cross-env NODE_ENV=production node app.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node server"
   },
   "keywords": [
     "koa",
@@ -54,13 +54,14 @@
     "koa-views": "^6.1.5",
     "koa-webpack": "^5.2.1",
     "koa2-history-api-fallback": "0.0.5",
+    "lodash": "^4.17.21",
     "mini-css-extract-plugin": "^0.5.0",
     "nib": "^1.1.2",
     "node-sass": "^4.13.0",
     "nodemon": "^1.18.9",
     "open-browser-webpack-plugin": "0.0.5",
     "postcss-loader": "^3.0.0",
-    "pug": "^2.0.3",
+    "pug": "^2.0.0-beta11",
     "pug-html-loader": "^1.1.5",
     "pug-loader": "^2.4.0",
     "return": "^1.0.0",

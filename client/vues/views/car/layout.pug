@@ -1,0 +1,17 @@
+
+mixin fn(text)
+  h3=`{{ ${text} }}`
+mixin mapList(arr)
+  p(v-for=`a in ${arr}`) {{ a }}
+
+
+
+.wrap
+  include include.pug
+  section
+    h2 我的站点
+    block scripts
+  section
+    block content
+    block foot
+      p 我是foot 的默认内容

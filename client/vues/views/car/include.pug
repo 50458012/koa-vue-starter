@@ -1,0 +1,15 @@
+mixin includeTest(a, ...args)
+  p= a
+    for arg in args
+      span= arg + ', '
+
+
+
+mixin includeTest(a, ...args)
+  p= a
+    for arg in args
+      span= arg + ', '
+
+
+
++includeTest('这是外部include文件调用的mixin', 1, 2,3,4,5)
